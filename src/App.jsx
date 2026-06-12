@@ -31,8 +31,13 @@ function App() {
     formState: { errors },
     watch,
     setValue,
+    clearErrors,
+    trigger,
   } = useForm({
     defaultValues: initialForm,
+    mode: 'onSubmit',
+    reValidateMode: 'onChange',
+    shouldFocusError: true,
   })
 
   const today = new Date().toISOString().split('T')[0]
@@ -59,10 +64,35 @@ function App() {
     if (!showCompanyFields) {
       setValue('companyName', '')
       setValue('employees', '')
+      clearErrors(['companyName', 'employees'])
     }
-  }, [showCompanyFields, setValue])
+  }, [showCompanyFields, setValue, clearErrors])
 
-  const onSubmit = (data) => {
+  const validateCurrentStep = async () => {
+    if (currentStep === 1) {
+      return trigger(['firstName', 'lastName', 'email', 'phone', 'dob', 'country'])
+    }
+
+    if (currentStep === 2) {
+      const fields = ['enquiryType']
+
+      if (showCompanyFields) {
+        fields.push('companyName', 'employees')
+      }
+
+      return trigger(fields)
+    }
+
+    return trigger(['subject', 'message', 'termsAccepted'])
+  }
+
+  const handleContinue = async () => {
+    const isStepValid = await validateCurrentStep()
+
+    if (!isStepValid) {
+      return
+    }
+
     if (currentStep === 1) {
       setCurrentStep(2)
       return
@@ -72,7 +102,9 @@ function App() {
       setCurrentStep(3)
       return
     }
+  }
 
+  const onSubmit = (data) => {
     setSubmitted(true)
     console.log(data)
   }
@@ -131,7 +163,8 @@ function App() {
                 </button>
               )}
               <button
-                type="submit"
+                type={currentStep === 3 ? 'submit' : 'button'}
+                onClick={currentStep === 3 ? undefined : handleContinue}
                 className="rounded-full bg-blue-600 px-5 py-2 font-medium text-white transition hover:bg-blue-700"
               >
                 {currentStep === 3 ? 'Submit' : 'Continue'}
