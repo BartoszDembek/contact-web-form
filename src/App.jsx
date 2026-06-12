@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form'
 import StepOne from './StepOne'
 import StepTwo from './StepTwo'
 import StepThree from './StepThree'
+import { getCountries } from './services/countriesService'
 
 const initialForm = {
   firstName: '',
@@ -39,6 +40,20 @@ function App() {
   const enquiryType = watch('enquiryType', 'Personal')
   const message = watch('message', '')
   const showCompanyFields = enquiryType === 'Business' || enquiryType === 'Partnership'
+
+  useEffect(() => {
+    const loadCountries = async () => {
+      try {
+        const data = await getCountries()
+        setCountries(data)
+      } catch (error) {
+        console.error('Failed to load countries:', error)
+        setCountries([])
+      }
+    }
+
+    loadCountries()
+  }, [])
 
   useEffect(() => {
     if (!showCompanyFields) {
