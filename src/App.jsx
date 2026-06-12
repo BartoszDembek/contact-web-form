@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import StepOne from './StepOne'
 import StepTwo from './StepTwo'
+import StepThree from './StepThree'
 
 const initialForm = {
   firstName: '',
@@ -13,6 +14,9 @@ const initialForm = {
   enquiryType: 'Personal',
   companyName: '',
   employees: '',
+  subject: '',
+  message: '',
+  termsAccepted: false,
 }
 
 function App() {
@@ -33,6 +37,7 @@ function App() {
   const today = new Date().toISOString().split('T')[0]
   const firstName = watch('firstName', '')
   const enquiryType = watch('enquiryType', 'Personal')
+  const message = watch('message', '')
   const showCompanyFields = enquiryType === 'Business' || enquiryType === 'Partnership'
 
   useEffect(() => {
@@ -48,6 +53,11 @@ function App() {
       return
     }
 
+    if (currentStep === 2) {
+      setCurrentStep(3)
+      return
+    }
+
     setSubmitted(true)
     console.log(data)
   }
@@ -57,15 +67,21 @@ function App() {
       <div className="mx-auto flex max-w-4xl flex-col gap-6">
         <header className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <p className="text-sm font-semibold uppercase tracking-[0.3em] text-blue-600">
-            Step {currentStep} of 2
+            Step {currentStep} of 3
           </p>
           <h1 className="mt-2 text-3xl font-semibold text-slate-900">
-            {currentStep === 1 ? 'Personal Information' : 'Enquiry Type & Conditional Fields'}
+            {currentStep === 1
+              ? 'Personal Information'
+              : currentStep === 2
+                ? 'Enquiry Type & Conditional Fields'
+                : 'Message & Consent'}
           </h1>
           <p className="mt-2 max-w-2xl text-sm text-slate-600">
             {currentStep === 1
               ? 'Please complete your personal details to continue.'
-              : 'Choose the nature of your enquiry and add company details when needed.'}
+              : currentStep === 2
+                ? 'Choose the nature of your enquiry and add company details when needed.'
+                : 'Add your message and confirm your consent before submitting.'}
           </p>
         </header>
 
@@ -75,21 +91,25 @@ function App() {
         >
           {currentStep === 1 ? (
             <StepOne register={register} errors={errors} countries={countries} today={today} />
-          ) : (
+          ) : currentStep === 2 ? (
             <StepTwo register={register} errors={errors} showCompanyFields={showCompanyFields} />
+          ) : (
+            <StepThree register={register} errors={errors} messageLength={message.length} />
           )}
 
           <div className="mt-6 flex flex-col gap-3 rounded-xl border border-emerald-100 bg-emerald-50 p-4 text-sm text-emerald-700 sm:flex-row sm:items-center sm:justify-between">
             <p>
               {currentStep === 1
                 ? 'All required fields must be completed before moving to the next step.'
-                : 'Select the enquiry type and add company details when relevant.'}
+                : currentStep === 2
+                  ? 'Select the enquiry type and add company details when relevant.'
+                  : 'Review your message and confirm your consent to continue.'}
             </p>
             <div className="flex gap-3">
-              {currentStep === 2 && (
+              {currentStep > 1 && (
                 <button
                   type="button"
-                  onClick={() => setCurrentStep(1)}
+                  onClick={() => setCurrentStep((step) => Math.max(1, step - 1))}
                   className="rounded-full border border-slate-300 bg-white px-5 py-2 font-medium text-slate-700 transition hover:bg-slate-100"
                 >
                   Back
@@ -99,7 +119,7 @@ function App() {
                 type="submit"
                 className="rounded-full bg-blue-600 px-5 py-2 font-medium text-white transition hover:bg-blue-700"
               >
-                {currentStep === 1 ? 'Continue' : 'Submit'}
+                {currentStep === 3 ? 'Submit' : 'Continue'}
               </button>
             </div>
           </div>
